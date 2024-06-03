@@ -10,3 +10,63 @@ run = ["sh", "-c", "npm run start"]
 [[ports]]
 localPort = 3000
 externalPort = 80
+
+[[ports]]
+localPort = 34033
+externalPort = 3002
+
+[[ports]]
+localPort = 35269
+externalPort = 6000
+
+[[ports]]
+localPort = 36273
+externalPort = 9000
+
+[[ports]]
+localPort = 36655
+externalPort = 3000
+
+[[ports]]
+localPort = 37275
+externalPort = 8000
+
+[[ports]]
+localPort = 38467
+externalPort = 8099
+
+[[ports]]
+localPort = 38779
+externalPort = 6800
+
+[[ports]]
+localPort = 40457
+externalPort = 8080
+
+[[ports]]
+localPort = 41055
+externalPort = 8008
+
+[[ports]]
+localPort = 41375
+externalPort = 3003
+
+[[ports]]
+localPort = 41625
+externalPort = 3001
+
+[[ports]]
+localPort = 44979
+externalPort = 4200
+
+[[ports]]
+localPort = 45095
+externalPort = 8081
+
+[[ports]]
+localPort = 45133
+externalPort = 5173
+
+[[ports]]
+localPort = 46653
+externalPort = 5000

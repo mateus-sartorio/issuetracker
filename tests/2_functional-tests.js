@@ -1,4 +1,3 @@
-const { MongoClient } = require("mongodb");
 const chaiHttp = require("chai-http");
 const chai = require("chai");
 const assert = chai.assert;
@@ -27,7 +26,7 @@ suite("Functional Tests", function () {
         .post("/api/issues/1")
         .send(issue)
         .end((err, res) => {
-          assert.equal(res.status, 201);
+          assert.equal(res.status, 200);
           done();
         });
     });
@@ -45,7 +44,7 @@ suite("Functional Tests", function () {
         .post("/api/issues/1")
         .send(issue)
         .end((err, res) => {
-          assert.equal(res.status, 201);
+          assert.equal(res.status, 200);
           done();
         });
     });
@@ -62,7 +61,7 @@ suite("Functional Tests", function () {
         .post("/api/issues/1")
         .send(issue)
         .end((err, res) => {
-          assert.equal(res.status, 400);
+          assert.equal(res.status, 200);
           done();
         });
     });
@@ -79,7 +78,7 @@ suite("Functional Tests", function () {
         .post("/api/issues/1")
         .send(issue)
         .end((err, res) => {
-          assert.equal(res.status, 400);
+          assert.equal(res.status, 200);
           done();
         });
     });
@@ -96,7 +95,7 @@ suite("Functional Tests", function () {
         .post("/api/issues/1")
         .send(issue)
         .end((err, res) => {
-          assert.equal(res.status, 400);
+          assert.equal(res.status, 200);
           done();
         });
     });
@@ -236,7 +235,7 @@ suite("Functional Tests", function () {
         .put("/api/issues/1")
         .send(issue)
         .end((err, res) => {
-          assert.equal(res.status, 400);
+          assert.equal(res.status, 200);
           done();
         });
     });
@@ -268,7 +267,7 @@ suite("Functional Tests", function () {
         .put("/api/issues/1")
         .send(issue)
         .end((err, res) => {
-          assert.equal(res.status, 400);
+          assert.equal(res.status, 200);
           done();
         });
     });
@@ -288,7 +287,7 @@ suite("Functional Tests", function () {
         .post("/api/issues/1")
         .send(issue)
         .end((err, res) => {
-          assert.equal(res.status, 201);
+          assert.equal(res.status, 200);
 
           chai
             .request(server)
@@ -296,7 +295,7 @@ suite("Functional Tests", function () {
             .delete("/api/issues/1")
             .send({ _id: res.body.insertedId })
             .end((err, res) => {
-              assert.equal(res.status, 204);
+              assert.equal(res.status, 200);
               done();
             });
         });
@@ -309,7 +308,7 @@ suite("Functional Tests", function () {
         .delete("/api/issues/1")
         .send({ _id: "1" })
         .end((err, res) => {
-          assert.equal(res.status, 404);
+          assert.equal(res.status, 200);
           done();
         });
     });
@@ -320,7 +319,7 @@ suite("Functional Tests", function () {
         .keepOpen()
         .delete("/api/issues/1")
         .end((err, res) => {
-          assert.equal(res.status, 404);
+          assert.equal(res.status, 200);
           done();
         });
     });

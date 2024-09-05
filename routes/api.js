@@ -1,10 +1,6 @@
 "use strict";
 
-const { MongoClient, ObjectId } = require("mongodb");
-
-function isEmptyObject(object) {
-  return Object.keys(object).length === 0;
-}
+const { ObjectId } = require("mongodb");
 
 module.exports = function (app, client) {
   app
@@ -13,8 +9,8 @@ module.exports = function (app, client) {
     .get(async function (req, res) {
       const project = req.params.project;
       const database = client.db("projects").collection(project);
-      const query = req.query;
 
+      const query = req.query;
       const filter = {};
 
       if (query.open) {
@@ -25,21 +21,48 @@ module.exports = function (app, client) {
         }
       }
 
-      if (query.assigned_to) {
-        filter.assigned_to = query.assigned_to;
+      let id;
+      if (req.query._id) {
+        id = new ObjectId(req.query._id);
       }
 
-      try {
-        let result;
-        if (!isEmptyObject(filter)) {
-          result = await database.find(filter).toArray();
-        } else {
-          result = await database.find().toArray();
-        }
+      if (id) {
+        filter._id = id;
+      }
 
-        res.status(200).json(result);
+      // if (query.created_on) {
+      //   filter.created_on = query.created_on;
+      // }
+
+      // if (query.updated_on) {
+      //   filter.updated_on = query.updated_on;
+      // }
+
+      try {
+        const result = await database
+          .find({
+            ...req.query,
+            ...filter,
+          })
+          .toArray();
+
+        const filteredResult = result.map((r) => {
+          return {
+            _id: r._id,
+            issue_title: r.issue_title ?? "",
+            issue_text: r.issue_text ?? "",
+            created_by: r.created_by ?? "",
+            assigned_to: r.assigned_to ?? "",
+            status_text: r.status_text ?? "",
+            open: r.open ?? true,
+            created_on: r.created_on ?? new Date(),
+            updated_on: r.updated_on ?? new Date(),
+          };
+        });
+
+        res.status(200).json(filteredResult);
       } catch (e) {
-        res.status(404).json({ message: "Resource not found" });
+        res.status(200).json({ message: "Resource not found" });
       }
     })
 
@@ -53,34 +76,106 @@ module.exports = function (app, client) {
           throw new Error();
         }
 
-        const result = await database.insertOne(body);
-        res.status(201).json(result);
+        const response = await database.insertOne({
+          ...body,
+          created_on: new Date(),
+          updated_on: new Date(),
+          open: true,
+        });
+
+        const createdIssue = await database.findOne({
+          _id: response.insertedId,
+        });
+
+        const returnObject = {
+          _id: createdIssue._id,
+          issue_title: createdIssue.issue_title,
+          issue_text: createdIssue.issue_text,
+          created_by: createdIssue.created_by,
+          assigned_to: createdIssue.assigned_to ?? "",
+          status_text: createdIssue.status_text ?? "",
+          open: createdIssue.open ?? true,
+          created_on: createdIssue.created_on,
+          updated_on: createdIssue.updated_on,
+        };
+
+        res.status(200).json(returnObject);
       } catch (e) {
-        res.status(400).json({ message: "Failed to create resource" });
+        res.status(200).json({ error: "required field(s) missing" });
       }
     })
 
     .put(async function (req, res) {
       let project = req.params.project;
       const database = client.db("projects").collection(project);
-      const body = req.body;
 
-      const newBody = JSON.parse(JSON.stringify(body));
-      delete newBody._id;
+      const body = req.body;
 
       try {
         if (!body._id) {
+          res.status(200).json({ error: "missing _id" });
+          return;
+        }
+
+        const id = new ObjectId(req.body._id);
+
+        const updatePayload = {
+          updated_on: new Date(),
+        };
+
+        if (body.issue_title) {
+          updatePayload.issue_title = body.issue_title;
+        }
+
+        if (body.issue_text) {
+          updatePayload.issue_text = body.issue_text;
+        }
+
+        if (body.created_by) {
+          updatePayload.created_by = body.created_by;
+        }
+
+        if (body.assigned_to) {
+          updatePayload.assigned_to = body.assigned_to;
+        }
+
+        if (body.status_text) {
+          updatePayload.status_text = body.status_text;
+        }
+
+        if (body.open) {
+          updatePayload.open = body.open;
+        }
+
+        if (
+          !updatePayload.issue_title &&
+          !updatePayload.issue_text &&
+          !updatePayload.created_by &&
+          !updatePayload.assigned_to &&
+          !updatePayload.status_text &&
+          !updatePayload.open
+        ) {
+          res
+            .status(200)
+            .json({ error: "no update field(s) sent", _id: req.body._id });
+
+          return;
+        }
+
+        const response = await database.updateOne(
+          { _id: id },
+          { $set: updatePayload },
+        );
+
+        if (response.modifiedCount === 0) {
           throw new Error();
         }
 
-        const result = await database.updateOne(
-          { _id: new ObjectId(body._id) },
-          { $set: { newBody } },
-        );
-
-        res.status(200).json(result);
+        res
+          .status(200)
+          .json({ result: "successfully updated", _id: req.body._id });
       } catch (e) {
-        res.status(400).json({ message: "Failed to update resource" });
+        res.status(200).json({ error: "could not update", _id: req.body._id });
       }
     })
 
@@ -91,13 +186,23 @@ module.exports = function (app, client) {
 
       try {
         if (!body._id) {
+          res.status(200).json({ error: "missing _id" });
+          return;
+        }
+
+        const id = new ObjectId(req.body._id);
+
+        const response = await database.deleteOne({ _id: id });
+
+        if (response.deletedCount === 0) {
           throw new Error();
         }
 
-        const result = database.deleteOne({ _id: new ObjectId(body._id) });
-        res.status(204).json(result);
+        res
+          .status(200)
+          .json({ result: "successfully deleted", _id: req.body._id });
       } catch (e) {
-        res.status(404).json({ message: "Failed to delete resource" });
+        res.status(200).json({ error: "could not delete", _id: req.body._id });
       }
     });
 };
